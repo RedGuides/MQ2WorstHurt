@@ -1,41 +1,24 @@
-// Uncomment this if using Builder, as it will have correct structs 
-//#define USING_BUILDER
+#include <mq/Plugin.h>
 
-#include "../MQ2Plugin.h"
-
-PLUGIN_VERSION(0.2);
 PreSetup("MQ2WorstHurt");
+PLUGIN_VERSION(0.2);
 
-BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret);
-
-// Called once, when the plugin is to initialize
-PLUGIN_API VOID InitializePlugin(VOID)
-{
-	AddMQ2Data("WorstHurt", dataWorstHurt);
-}
-
-// Called once, when the plugin is to shutdown
-PLUGIN_API VOID ShutdownPlugin(VOID)
-{
-	RemoveMQ2Data("WorstHurt");
-}
-
-BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret)
+bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 {
 	// szIndex format:
 	// <group|xtarget|both>,<n>,<radius>,<include pets>
 
 	// Default argument values
-	auto includeGroup = true;
-	auto includeXTarget = true;
-	auto n = 1;
-	auto radius = 999999.0f;
-	auto includePets = true;
+	bool includeGroup = true;
+	bool includeXTarget = true;
+	bool includePets = true;
+	int n = 1;
+	float radius = 999999;
 
 	char szArg[MAX_STRING] = { 0 };
 
 	// By default, return Me
-	Ret.Type = pSpawnType;
+	Ret.Type = mq::datatypes::pSpawnType;
 	Ret.Ptr = pCharSpawn;
 
 	if (GetArg(szArg, szIndex, 1, FALSE, FALSE, TRUE) && strlen(szArg) > 0)
@@ -95,7 +78,6 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret)
 			if (kvp.second == pSpawn)
 				return;
 
-#ifdef USING_BUILDER
 		if (!(GetSpawnType(pSpawn) == PC || GetSpawnType(pSpawn) == PET))
 			return;
 
@@ -103,77 +85,62 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret)
 		spawns.insert(std::pair<float, PSPAWNINFO>(pctHPs, pSpawn));
 		if (includePets && pSpawn->PetID)
 		{
-			pSpawn = (PSPAWNINFO)GetSpawnByID(pSpawn->PetID);
+			pSpawn = reinterpret_cast<PSPAWNINFO>(GetSpawnByID(pSpawn->PetID));
 			if (pSpawn)
 			{
-				auto pctHPs = pSpawn->HPMax > 0 ? 100.0f * (float)pSpawn->HPCurrent / (float)pSpawn->HPMax : 0.0f;
+				pctHPs = pSpawn->HPMax > 0 ? 100.0f * (float)pSpawn->HPCurrent / (float)pSpawn->HPMax : 0.0f;
 				spawns.insert(std::pair<float, PSPAWNINFO>(pctHPs, pSpawn));
 			}
 		}
-#else
-		MQ2VARPTR varPtr = { 0 };
-		MQ2TYPEVAR ret = { 0 };
-
-		varPtr.Ptr = pSpawn;
-
-		// Sanity check to make sure this is actually a PC/Pet
-		if (!pSpawnType->GetMember(varPtr, "Type", "", ret) || (_stricmp("Pet", (char *)ret.Ptr) && _stricmp("PC", (char *)ret.Ptr)))
-			return;
-
-		if (pSpawnType->GetMember(varPtr, "PctHPs", "", ret))
-			spawns.insert(std::pair<float, PSPAWNINFO>((float)ret.Int64, pSpawn));
-
-		if (includePets)
-		{
-			// GetMember(Pet) will set Ptr to PetSpawn if there's no pet
-			pSpawnType->GetMember(varPtr, "Pet", "", ret);
-			if (ret.Ptr != &PetSpawn)
-			{
-				varPtr.Ptr = ret.Ptr;
-
-				// Sanity check to make sure this is actually a pet
-				if (!pSpawnType->GetMember(varPtr, "Type", "", ret) || _stricmp("Pet", (char *)ret.Ptr))
-					return;
-
-				if (pSpawnType->GetMember(varPtr, "PctHPs", "", ret))
-					spawns.insert(std::pair<float, PSPAWNINFO>((float)ret.Int64, (PSPAWNINFO)varPtr.Ptr));
-			}
-		}
-#endif
 	};
 
 	// Always include self
-	AddSpawn((PSPAWNINFO)pCharSpawn);
+	AddSpawn(pCharSpawn);
 
 	// Add group members if set to, and we're in a group
-	if (includeGroup && pChar && pChar->pGroupInfo) // pGroupInfo is at 0x2844 in my EQData.h from test, and in the live exe, so this works
-		for (auto nMember = 0; nMember < 6; nMember++)
-			if (pChar->pGroupInfo->pMember[nMember])
-				AddSpawn(pChar->pGroupInfo->pMember[nMember]->pSpawn);
-
-	// Add XTargets if set to
-	if (includeXTarget)
+	if (includeGroup && pChar && pChar->pGroupInfo)
 	{
-		for (auto nXTarget = 0; nXTarget < 13; nXTarget++)
+		for (auto& nMember : pChar->pGroupInfo->pMember)
 		{
-			// pXTargetMgr is at 0x2830 in my EQData.h from test, and in the live exe, so this works
-			auto xts = pChar->pXTargetMgr->XTargetSlots[nXTarget];
-			if (xts.xTargetType == XTARGET_SPECIFIC_PC)
-				AddSpawn((PSPAWNINFO)GetSpawnByID(xts.SpawnID));
+			AddSpawn(nMember->pSpawn);
 		}
 	}
 
-	// return nth spawn in the list. Multimap sorts in ascending order, so be iterating through it n times we get the nth lowest HP spawn
-	for (auto it = spawns.begin();  it != spawns.end(); ++it)
+	// Add XTargets if set to
+	if (includeXTarget && pChar && pChar->pXTargetMgr)
+	{
+		for (auto& nXTarget : pChar->pXTargetMgr->XTargetSlots)
+		{
+			if (nXTarget.xTargetType == XTARGET_SPECIFIC_PC)
+			{
+				AddSpawn(reinterpret_cast<PSPAWNINFO>(GetSpawnByID(nXTarget.SpawnID)));
+			}
+		}
+	}
+
+	// return nth spawn in the list. Multimap sorts in ascending order, so by iterating through it n times we get the nth lowest HP spawn
+	for (auto& spawn : spawns)
 	{
 		if (--n == 0)
 		{
-			Ret.Ptr = (*it).second;
-			Ret.Type = pSpawnType;
+			Ret.Ptr = spawn.second;
+			Ret.Type = mq::datatypes::pSpawnType;
 			return true;
 		}
 	}
 
 	// We could get here if we reach there are less than n items in the list
 	return true;
+}
+
+// Called once, when the plugin is to initialize
+PLUGIN_API void InitializePlugin()
+{
+	AddMQ2Data("WorstHurt", dataWorstHurt);
+}
+
+// Called once, when the plugin is to shutdown
+PLUGIN_API void ShutdownPlugin()
+{
+	RemoveMQ2Data("WorstHurt");
 }
