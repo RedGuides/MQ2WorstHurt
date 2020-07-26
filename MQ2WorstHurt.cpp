@@ -1,4 +1,4 @@
-// Uncomment this if using Builder, as it will have correct structs 
+// Uncomment this if using Builder, as it will have correct structs
 //#define USING_BUILDER
 
 #include "../MQ2Plugin.h"
@@ -6,21 +6,9 @@
 PLUGIN_VERSION(0.2);
 PreSetup("MQ2WorstHurt");
 
-BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret);
+BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR& Ret);
 
-// Called once, when the plugin is to initialize
-PLUGIN_API VOID InitializePlugin(VOID)
-{
-	AddMQ2Data("WorstHurt", dataWorstHurt);
-}
-
-// Called once, when the plugin is to shutdown
-PLUGIN_API VOID ShutdownPlugin(VOID)
-{
-	RemoveMQ2Data("WorstHurt");
-}
-
-BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret)
+BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR& Ret)
 {
 	// szIndex format:
 	// <group|xtarget|both>,<n>,<radius>,<include pets>
@@ -57,7 +45,7 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret)
 
 	if (GetArg(szArg, szIndex, 2, FALSE, FALSE, TRUE) && strlen(szArg) > 0)
 	{
-		char * pFound;
+		char* pFound;
 		n = strtoul(szArg, &pFound, 10);
 		if (!pFound || n < 1)
 			return true;
@@ -65,7 +53,7 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret)
 
 	if (GetArg(szArg, szIndex, 3, FALSE, FALSE, TRUE) && strlen(szArg) > 0)
 	{
-		char * pFound;
+		char* pFound;
 		radius = strtof(szArg, &pFound);
 		if (!pFound)
 			return true;
@@ -117,7 +105,7 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret)
 		varPtr.Ptr = pSpawn;
 
 		// Sanity check to make sure this is actually a PC/Pet
-		if (!pSpawnType->GetMember(varPtr, "Type", "", ret) || (_stricmp("Pet", (char *)ret.Ptr) && _stricmp("PC", (char *)ret.Ptr)))
+		if (!pSpawnType->GetMember(varPtr, "Type", "", ret) || (_stricmp("Pet", (char*)ret.Ptr) && _stricmp("PC", (char*)ret.Ptr)))
 			return;
 
 		if (pSpawnType->GetMember(varPtr, "PctHPs", "", ret))
@@ -132,7 +120,7 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret)
 				varPtr.Ptr = ret.Ptr;
 
 				// Sanity check to make sure this is actually a pet
-				if (!pSpawnType->GetMember(varPtr, "Type", "", ret) || _stricmp("Pet", (char *)ret.Ptr))
+				if (!pSpawnType->GetMember(varPtr, "Type", "", ret) || _stricmp("Pet", (char*)ret.Ptr))
 					return;
 
 				if (pSpawnType->GetMember(varPtr, "PctHPs", "", ret))
@@ -164,7 +152,7 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret)
 	}
 
 	// return nth spawn in the list. Multimap sorts in ascending order, so be iterating through it n times we get the nth lowest HP spawn
-	for (auto it = spawns.begin();  it != spawns.end(); ++it)
+	for (auto it = spawns.begin(); it != spawns.end(); ++it)
 	{
 		if (--n == 0)
 		{
@@ -176,4 +164,16 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR &Ret)
 
 	// We could get here if we reach there are less than n items in the list
 	return true;
+}
+
+// Called once, when the plugin is to initialize
+PLUGIN_API VOID InitializePlugin(VOID)
+{
+	AddMQ2Data("WorstHurt", dataWorstHurt);
+}
+
+// Called once, when the plugin is to shutdown
+PLUGIN_API VOID ShutdownPlugin(VOID)
+{
+	RemoveMQ2Data("WorstHurt");
 }
