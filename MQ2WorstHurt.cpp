@@ -25,13 +25,11 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR& Ret)
 	{
 		if (!_stricmp(szArg, "group"))
 		{
-			includeGroup = true;
 			includeXTarget = false;
 		}
 		else if (!_stricmp(szArg, "xtarget"))
 		{
 			includeGroup = false;
-			includeXTarget = true;
 		}
 		// Default settings are both, but bail out if it's not specified
 		else if (_stricmp(szArg, "both"))
@@ -78,7 +76,7 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR& Ret)
 			if (kvp.second == pSpawn)
 				return;
 
-		if (!(GetSpawnType(pSpawn) == PC || GetSpawnType(pSpawn) == PET))
+		if (!(GetSpawnType(pSpawn) == PC || GetSpawnType(pSpawn) == PET || GetSpawnType(pSpawn) == MERCENARY))
 			return;
 
 		auto pctHPs = pSpawn->HPMax > 0 ? 100.0f * (float)pSpawn->HPCurrent / (float)pSpawn->HPMax : 0.0f;
