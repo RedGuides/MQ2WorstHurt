@@ -68,7 +68,7 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR& Ret)
 	// Helper function to add a spawn and its pet (if enabled) to the list
 	auto AddSpawn = [&](PSPAWNINFO pSpawn) -> void {
 		// Ignore spawns if they are null, outside our radius, or they're not a PC/Pet
-		if (!pSpawn || GetDistance(reinterpret_cast<PSPAWNINFO>pCharSpawn, pSpawn) > radius)
+		if (!pSpawn || GetDistance(reinterpret_cast<PSPAWNINFO>(pCharSpawn), pSpawn) > radius)
 			return;
 
 		// Don't add things twice, this could happen if a group member is on xtarget
@@ -93,14 +93,15 @@ BOOL dataWorstHurt(PCHAR szIndex, MQ2TYPEVAR& Ret)
 	};
 
 	// Always include self
-	AddSpawn(reinterpret_cast<PSPAWNINFO>pCharSpawn);
+	AddSpawn(reinterpret_cast<PSPAWNINFO>(pCharSpawn));
 
 	// Add group members if set to, and we're in a group
 	if (includeGroup && pChar && pChar->pGroupInfo)
 	{
 		for (auto& nMember : pChar->pGroupInfo->pMember)
 		{
-			AddSpawn(nMember->pSpawn);
+			if (nMember)
+				AddSpawn(nMember->pSpawn);
 		}
 	}
 
