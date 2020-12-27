@@ -68,7 +68,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	// Helper function to add a spawn and its pet (if enabled) to the list
 	auto AddSpawn = [&](PSPAWNINFO pSpawn) -> void {
 		// Ignore spawns if they are null, outside our radius, or they're not a PC/Pet
-		if (!pSpawn || GetDistance(reinterpret_cast<PSPAWNINFO>(pCharSpawn), pSpawn) > radius)
+		if (!pSpawn || GetDistance(pCharSpawn, pSpawn) > radius)
 			return;
 
 		// Don't add things twice, this could happen if a group member is on xtarget
