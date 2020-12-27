@@ -25,13 +25,11 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	{
 		if (!_stricmp(szArg, "group"))
 		{
-			includeGroup = true;
 			includeXTarget = false;
 		}
 		else if (!_stricmp(szArg, "xtarget"))
 		{
 			includeGroup = false;
-			includeXTarget = true;
 		}
 		// Default settings are both, but bail out if it's not specified
 		else if (_stricmp(szArg, "both"))
@@ -40,7 +38,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 
 	if (GetArg(szArg, szIndex, 2, FALSE, FALSE, TRUE) && strlen(szArg) > 0)
 	{
-		char * pFound;
+		char* pFound;
 		n = strtoul(szArg, &pFound, 10);
 		if (!pFound || n < 1)
 			return true;
@@ -48,7 +46,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 
 	if (GetArg(szArg, szIndex, 3, FALSE, FALSE, TRUE) && strlen(szArg) > 0)
 	{
-		char * pFound;
+		char* pFound;
 		radius = strtof(szArg, &pFound);
 		if (!pFound)
 			return true;
@@ -70,7 +68,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	// Helper function to add a spawn and its pet (if enabled) to the list
 	auto AddSpawn = [&](PSPAWNINFO pSpawn) -> void {
 		// Ignore spawns if they are null, outside our radius, or they're not a PC/Pet
-		if (!pSpawn || GetDistance((PSPAWNINFO)pCharSpawn, pSpawn) > radius)
+		if (!pSpawn || GetDistance(reinterpret_cast<PSPAWNINFO>(pCharSpawn), pSpawn) > radius)
 			return;
 
 		// Don't add things twice, this could happen if a group member is on xtarget
@@ -78,7 +76,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 			if (kvp.second == pSpawn)
 				return;
 
-		if (!(GetSpawnType(pSpawn) == PC || GetSpawnType(pSpawn) == PET))
+		if (!(GetSpawnType(pSpawn) == PC || GetSpawnType(pSpawn) == PET || GetSpawnType(pSpawn) == MERCENARY))
 			return;
 
 		auto pctHPs = pSpawn->HPMax > 0 ? 100.0f * (float)pSpawn->HPCurrent / (float)pSpawn->HPMax : 0.0f;
@@ -102,18 +100,19 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	{
 		for (auto& nMember : pChar->pGroupInfo->pMember)
 		{
-			AddSpawn(nMember->pSpawn);
+			if (nMember)
+				AddSpawn(nMember->pSpawn);
 		}
 	}
 
 	// Add XTargets if set to
 	if (includeXTarget && pChar && pChar->pXTargetMgr)
 	{
-		for (auto& nXTarget : pChar->pXTargetMgr->XTargetSlots)
+		for (auto& xts : pChar->pXTargetMgr->XTargetSlots)
 		{
-			if (nXTarget.xTargetType == XTARGET_SPECIFIC_PC)
+			if (xts.xTargetType == XTARGET_SPECIFIC_PC)
 			{
-				AddSpawn(reinterpret_cast<PSPAWNINFO>(GetSpawnByID(nXTarget.SpawnID)));
+				AddSpawn(reinterpret_cast<PSPAWNINFO>(GetSpawnByID(xts.SpawnID)));
 			}
 		}
 	}
