@@ -98,7 +98,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	// Add group members if set to, and we're in a group
 	if (includeGroup && pChar && pChar->pGroupInfo)
 	{
-		for (auto& nMember : pChar->pGroupInfo->pMember)
+		for (auto& nMember : *pChar->pGroupInfo)
 		{
 			if (nMember)
 				AddSpawn(nMember->pSpawn);
