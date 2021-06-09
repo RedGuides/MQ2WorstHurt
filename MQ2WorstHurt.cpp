@@ -18,8 +18,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	char szArg[MAX_STRING] = { 0 };
 
 	// By default, return Me
-	Ret.Type = mq::datatypes::pSpawnType;
-	Ret.Ptr = pCharSpawn;
+	Ret = mq::datatypes::pSpawnType->MakeTypeVar(pCharSpawn);
 
 	if (GetArg(szArg, szIndex, 1, FALSE, FALSE, TRUE) && strlen(szArg) > 0)
 	{
@@ -111,7 +110,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 		{
 			if (xts.xTargetType == XTARGET_SPECIFIC_PC)
 			{
-				AddSpawn(reinterpret_cast<PSPAWNINFO>(GetSpawnByID(xts.SpawnID)));
+				AddSpawn(GetSpawnByID(xts.SpawnID));
 			}
 		}
 	}
@@ -121,8 +120,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	{
 		if (--n == 0)
 		{
-			Ret.Ptr = spawn.second;
-			Ret.Type = mq::datatypes::pSpawnType;
+			Ret = mq::datatypes::pSpawnType->MakeTypeVar(spawn.second);
 			return true;
 		}
 	}
