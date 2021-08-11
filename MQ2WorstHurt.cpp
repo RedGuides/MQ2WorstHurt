@@ -99,7 +99,10 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	{
 		for (CGroupMember* pMember : *pChar->pGroupInfo)
 		{
-			AddSpawn(pMember->pSpawn);
+			if (pMember && pMember->pSpawn)
+			{
+				AddSpawn(pMember->pSpawn);
+			}
 		}
 	}
 
