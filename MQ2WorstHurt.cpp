@@ -20,7 +20,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	// By default, return Me
 	Ret = mq::datatypes::pSpawnType->MakeTypeVar(pLocalPlayer);
 
-	if (GetArg(szArg, szIndex, 1, false, false, true) && strlen(szArg) > 0)
+	if (GetArg(szArg, szIndex, 1, false, false, true) && szArg[0] != '\0')
 	{
 		if (!_stricmp(szArg, "group"))
 		{
@@ -35,23 +35,21 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 			return true;
 	}
 
-	if (GetArg(szArg, szIndex, 2, false, false, true) && strlen(szArg) > 0)
+	if (GetArg(szArg, szIndex, 2, false, false, true) && szArg[0] != '\0')
 	{
-		char* pFound;
-		n = strtoul(szArg, &pFound, 10);
-		if (!pFound || n < 1)
+		n = GetIntFromString(szArg, 0);
+		if (n < 0)
 			return true;
 	}
 
-	if (GetArg(szArg, szIndex, 3, false, false, true) && strlen(szArg) > 0)
+	if (GetArg(szArg, szIndex, 3, false, false, true) && szArg[0] != '\0')
 	{
-		char* pFound;
-		radius = strtof(szArg, &pFound);
-		if (!pFound)
+		radius = GetFloatFromString(szArg, -1.0f);
+		if (radius < 0.0f)
 			return true;
 	}
 
-	if (GetArg(szArg, szIndex, 4, false, false, true) && strlen(szArg) > 0)
+	if (GetArg(szArg, szIndex, 4, false, false, true) && szArg[0] != '\0')
 	{
 		double result;
 		if (!Calculate(szArg, result))
