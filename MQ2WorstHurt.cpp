@@ -18,9 +18,9 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	char szArg[MAX_STRING] = { 0 };
 
 	// By default, return Me
-	Ret = mq::datatypes::pSpawnType->MakeTypeVar(pCharSpawn);
+	Ret = mq::datatypes::pSpawnType->MakeTypeVar(pLocalPlayer);
 
-	if (GetArg(szArg, szIndex, 1, FALSE, FALSE, TRUE) && strlen(szArg) > 0)
+	if (GetArg(szArg, szIndex, 1, false, false, true) && strlen(szArg) > 0)
 	{
 		if (!_stricmp(szArg, "group"))
 		{
@@ -35,7 +35,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 			return true;
 	}
 
-	if (GetArg(szArg, szIndex, 2, FALSE, FALSE, TRUE) && strlen(szArg) > 0)
+	if (GetArg(szArg, szIndex, 2, false, false, true) && strlen(szArg) > 0)
 	{
 		char* pFound;
 		n = strtoul(szArg, &pFound, 10);
@@ -43,7 +43,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 			return true;
 	}
 
-	if (GetArg(szArg, szIndex, 3, FALSE, FALSE, TRUE) && strlen(szArg) > 0)
+	if (GetArg(szArg, szIndex, 3, false, false, true) && strlen(szArg) > 0)
 	{
 		char* pFound;
 		radius = strtof(szArg, &pFound);
@@ -51,7 +51,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 			return true;
 	}
 
-	if (GetArg(szArg, szIndex, 4, FALSE, FALSE, TRUE) && strlen(szArg) > 0)
+	if (GetArg(szArg, szIndex, 4, false, false, true) && strlen(szArg) > 0)
 	{
 		double result;
 		if (!Calculate(szArg, result))
@@ -59,15 +59,13 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 		includePets = result != 0.0f;
 	}
 
-	PCHARINFO pChar = GetCharInfo();
-
 	// list of spawns, sorted by pctHPs
-	std::multimap<float, PSPAWNINFO> spawns;
+	std::multimap<float, PlayerClient*> spawns;
 
 	// Helper function to add a spawn and its pet (if enabled) to the list
-	auto AddSpawn = [&](PSPAWNINFO pSpawn) -> void {
+	auto AddSpawn = [&](PlayerClient* pSpawn) -> void {
 		// Ignore spawns if they are null, outside our radius, or they're not a PC/Pet
-		if (!pSpawn || GetDistance(pCharSpawn, pSpawn) > radius)
+		if (!pSpawn || GetDistance(pLocalPlayer, pSpawn) > radius)
 			return;
 
 		// Don't add things twice, this could happen if a group member is on xtarget
@@ -79,25 +77,25 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 			return;
 
 		auto pctHPs = pSpawn->HPMax > 0 ? 100.0f * (float)pSpawn->HPCurrent / (float)pSpawn->HPMax : 0.0f;
-		spawns.insert(std::pair<float, PSPAWNINFO>(pctHPs, pSpawn));
+		spawns.insert(std::pair<float, PlayerClient*>(pctHPs, pSpawn));
 		if (includePets && pSpawn->PetID)
 		{
-			pSpawn = reinterpret_cast<PSPAWNINFO>(GetSpawnByID(pSpawn->PetID));
+			pSpawn = GetSpawnByID(pSpawn->PetID);
 			if (pSpawn)
 			{
 				pctHPs = pSpawn->HPMax > 0 ? 100.0f * (float)pSpawn->HPCurrent / (float)pSpawn->HPMax : 0.0f;
-				spawns.insert(std::pair<float, PSPAWNINFO>(pctHPs, pSpawn));
+				spawns.insert(std::pair<float, PlayerClient*>(pctHPs, pSpawn));
 			}
 		}
 	};
 
 	// Always include self
-	AddSpawn(pCharSpawn);
+	AddSpawn(pLocalPlayer);
 
 	// Add group members if set to, and we're in a group
-	if (includeGroup && pChar && pChar->pGroupInfo)
+	if (includeGroup && pLocalPC && pLocalPC->pGroupInfo)
 	{
-		for (CGroupMember* pMember : *pChar->pGroupInfo)
+		for (CGroupMember* pMember : *pLocalPC->pGroupInfo)
 		{
 			if (pMember && pMember->pSpawn)
 			{
@@ -107,9 +105,9 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 	}
 
 	// Add XTargets if set to
-	if (includeXTarget && pChar && pChar->pXTargetMgr)
+	if (includeXTarget && pLocalPC && pLocalPC->pXTargetMgr)
 	{
-		for (auto& xts : pChar->pXTargetMgr->XTargetSlots)
+		for (auto& xts : pLocalPC->pXTargetMgr->XTargetSlots)
 		{
 			if (xts.xTargetType == XTARGET_SPECIFIC_PC)
 			{
