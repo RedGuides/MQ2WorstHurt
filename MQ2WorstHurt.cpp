@@ -67,7 +67,7 @@ bool dataWorstHurt(const char* szIndex, MQTypeVar& Ret)
 			return;
 
 		// Don't add things twice, this could happen if a group member is on xtarget
-		for each (auto kvp in spawns)
+		for (const auto& kvp : spawns)
 			if (kvp.second == pSpawn)
 				return;
 
