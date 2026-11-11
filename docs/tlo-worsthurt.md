@@ -10,7 +10,9 @@ Helps find the "worst hurt" member of your party, xtar list or pet.
 
 ## Forms
 <!--tlo-forms-start-->
-### {{ renderMember(type='spawn', name='WorstHurt[<group|xtarget|both>,<n>,<radius>,<includePets>]') }}
+/// member | spawn WorstHurt[<group|xtarget|both>,<n>,<radius>,<includePets>]
+    label: WorstHurt[group|xtarget|both,n,radius,includePets]
+///
 
 <!--tlo-forms-end-->
 
